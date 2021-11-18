@@ -59,7 +59,7 @@ namespace MadSkunky.TutorialTweaks
         {
             if (Config.NewSpecialAresSettings.Manufacturable)
             {
-                DefPatches.ApllyManufacturableTutAres();
+                DefPatches.MakeSpecialAresManufacturable();
             }
             Logger.Debug("----------------------------------------------------------------------------------------------------", false);
             Logger.Debug("GeoscapeMod: Repository definitions patched");

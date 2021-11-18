@@ -5,9 +5,11 @@
     {
         // config fields
         // If true Jacob get the modified 'Ares SAR-1 mod' as main weapon (see below), otherwise a standard Ares AR-1
-        public bool UseNewSpecialAresForJacob = true;
+        public bool GiveJacobAssaultRifleProficiency = true;
+        public bool GiveJacobNewSpecialAres = true;
         // Modification to Jacobs 'Ares SAR-1 mod'
         public NewSpecialAresSetStruct NewSpecialAresSettings = new NewSpecialAresSetStruct(
+            true,
             35,
             1,
             0,
@@ -20,11 +22,11 @@
             );
         // DebugLevel (0: nothing, 1: error, 2: debug, 3: info)
         public int Debug = 1;
-
     }
     internal struct NewSpecialAresSetStruct
     {
         public NewSpecialAresSetStruct(
+            bool nopenalty,
             int damage,
             int shred,
             int pierce,
@@ -36,6 +38,7 @@
             int tp
             )
         {
+            NoPenaltyWithoutProficiency = nopenalty;
             Damage = damage;
             Shred = shred;
             Pierce = pierce;
@@ -45,6 +48,7 @@
             ManufacturingCost = new ManufacureCost(tech, mat, tp);
         }
 
+        public bool NoPenaltyWithoutProficiency;
         public int Damage;
         public int Shred;
         public int Pierce;

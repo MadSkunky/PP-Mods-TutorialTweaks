@@ -20,6 +20,7 @@ namespace MadSkunky.TutorialTweaks
     {
         // Get definition repository and shared data
         private static readonly DefRepository Repo = GameUtl.GameComponent<DefRepository>();
+        private static readonly ModConfig modConfig = TutorialTweaks.Config;
         private static readonly SharedData Shared = GameUtl.GameComponent<SharedData>();
         public static void ApplyJacobAsSniper()
         {
@@ -27,44 +28,53 @@ namespace MadSkunky.TutorialTweaks
             TacCharacterDef Jacob1 = Repo.GetAllDefs<TacCharacterDef>().First(tcd => tcd.name.Contains("PX_Jacob_Tutorial_TacCharacterDef"));
             // Set class related definitions
             Jacob1.Data.ViewElementDef = Repo.GetAllDefs<ViewElementDef>().First(ved => ved.name.Contains("E_View [PX_Sniper_ActorViewDef]"));
+            // Switch the ClassTagDef in Jacobs GameTags
             GameTagDef Sniper_CTD = Repo.GetAllDefs<GameTagDef>().First(gtd => gtd.name.Contains("Sniper_ClassTagDef"));
-            for (int i = 0; i < Jacob1.Data.GameTags.Length; i++) // for safety, only change the right postition in the array for game tags
+            for (int i = 0; i < Jacob1.Data.GameTags.Length; i++)
             {
                 if (Jacob1.Data.GameTags[i].GetType() == Sniper_CTD.GetType())
                 {
                     Jacob1.Data.GameTags[i] = Sniper_CTD;
                 }
             }
-            // creating new arrays for abilities, armor, equipment and inventory -> overwrite old sets completely
+            if (modConfig.GiveJacobAssaultRifleProficiency)
+            {
+                // Get Assault Rifle item tag and add it to Jacobs GameTags = Jacob get proficiency for ARs
+                List<GameTagDef> JacobsGameTagsList = Jacob1.Data.GameTags.ToList();
+                JacobsGameTagsList.Add(Repo.GetAllDefs<GameTagDef>().First(gtd => gtd.name.Contains("AssaultRifleItem_TagDef")));
+                Jacob1.Data.GameTags = JacobsGameTagsList.ToArray();
+            }
+            // Creating new arrays for Abilities, BodypartItems (armor), EquipmentItems (ready slots) and InventoryItems (backpack)
+            // -> Overwrite old sets completely
             Jacob1.Data.Abilites = new TacticalAbilityDef[] // abilities
             { 
                 Repo.GetAllDefs<ClassProficiencyAbilityDef>().First(cpad => cpad.name.Contains("Sniper_ClassProficiency_AbilityDef"))//,
                 //defRepository.GetAllDefs<TacticalAbilityDef>().First(cpad => cpad.name.Contains("GoodShot_AbilityDef"))
             };
-            Jacob1.Data.BodypartItems = new ItemDef[] //armour
+            Jacob1.Data.BodypartItems = new ItemDef[] // Armour
             {
                 Repo.GetAllDefs<TacticalItemDef>().First(tad => tad.name.Contains("PX_Sniper_Helmet_BodyPartDef")),
                 Repo.GetAllDefs<TacticalItemDef>().First(tad => tad.name.Contains("PX_Sniper_Torso_BodyPartDef")),
                 Repo.GetAllDefs<TacticalItemDef>().First(tad => tad.name.Contains("PX_Sniper_Legs_ItemDef"))
             };
-            
-            WeaponDef JacobsAR = TutorialTweaks.Config.UseNewSpecialAresForJacob ?
-                PrepareTutorialAres(Repo) :
+            WeaponDef TutorialAres = PrepareSpecialAres(Repo);
+            WeaponDef JacobsAR = modConfig.GiveJacobNewSpecialAres ?
+                TutorialAres :
                 Repo.GetAllDefs<WeaponDef>().First(wd => wd.name.Contains("PX_AssaultRifle_WeaponDef"));
-            Jacob1.Data.EquipmentItems = new ItemDef[] // equipment = ready slots
+            Jacob1.Data.EquipmentItems = new ItemDef[] // Ready slots
             {
                 JacobsAR,
                 Repo.GetAllDefs<WeaponDef>().First(wd => wd.name.Contains("PX_SniperRifle_WeaponDef")),
                 Repo.GetAllDefs<TacticalItemDef>().First(tad => tad.name.Contains("Medkit_EquipmentDef"))
             };
-            Jacob1.Data.InventoryItems = new ItemDef[] // inventory = backpack
+            Jacob1.Data.InventoryItems = new ItemDef[] // Backpack
             {
                 Jacob1.Data.EquipmentItems[0].CompatibleAmmunition[0],
                 Jacob1.Data.EquipmentItems[1].CompatibleAmmunition[0]
             };
             // Get Jacobs definition for the 2nd and following parts of the tutorial
             TacCharacterDef Jacob2 = Repo.GetAllDefs<TacCharacterDef>().First(tcd => tcd.name.Contains("PX_Jacob_Tutorial2_TacCharacterDef"));
-            // copy changes from above
+            // Copy changes from Jabobs 1st to his 2nd definition
             Jacob2.Data.ViewElementDef = Jacob1.Data.ViewElementDef;
             Jacob2.Data.GameTags = Jacob1.Data.GameTags;
             Jacob2.Data.Abilites = Jacob1.Data.Abilites;
@@ -72,20 +82,23 @@ namespace MadSkunky.TutorialTweaks
             Jacob2.Data.EquipmentItems = Jacob1.Data.EquipmentItems;
             Jacob2.Data.InventoryItems = Jacob1.Data.InventoryItems;
 
-            // logging
+            // Logging
             LogTacCharDef(Jacob1);
             LogTacCharDef(Jacob2);
         }
-        // special 'tutorial' Ares AR, unused def in repo, modified for Jacob
-        private static WeaponDef PrepareTutorialAres(DefRepository Repo)
+        // Special 'tutorial' Ares AR, unused def in repo, modified into a new AR
+        private static WeaponDef PrepareSpecialAres(DefRepository Repo)
         {
-            ModConfig modConfig = TutorialTweaks.Config;
-            //SharedData Shared = GameUtl.GameComponent<SharedData>();
+            // SharedData Shared = GameUtl.GameComponent<SharedData>();
             WeaponDef AresTutorial = Repo.GetAllDefs<WeaponDef>().First(tad => tad.name.Contains("PX_AssaultRifle_Tutorial_WeaponDef"));
             WeaponDef AresGold = Repo.GetAllDefs<WeaponDef>().First(tad => tad.name.Contains("PX_AssaultRifle_Gold_WeaponDef"));
             WeaponDef AresDefault = Repo.GetAllDefs<WeaponDef>().First(tad => tad.name.Contains("PX_AssaultRifle_WeaponDef"));
-            GameTagDef AllClasses_CTD = Repo.GetAllDefs<GameTagDef>().First(gtd => gtd.name.Contains("AllClasses_ClassTagDef"));
-            AresTutorial.Tags.Add(AllClasses_CTD);
+            if (modConfig.NewSpecialAresSettings.NoPenaltyWithoutProficiency)
+            {
+                GameTagDef AllClasses_CTD = Repo.GetAllDefs<GameTagDef>().First(gtd => gtd.name.Contains("AllClasses_ClassTagDef"));
+                AresTutorial.Tags.Add(AllClasses_CTD);                    // Selectable without warning and for all classes
+                AresTutorial.IncompetenceAccuracyMultiplier = (float)1.0; // No penalty when using without proficiency
+            }
             AresTutorial.ViewElementDef.DisplayName1.LocalizationKey = "KEY_PX_MSTT_ASSAULT_RIFLE_NAME";
             AresTutorial.ViewElementDef.Description.LocalizationKey = "KEY_PX_MSTT_ASSAULT_RIFLE_DESCRIPTION";
             AresTutorial.ViewElementDef.SmallIcon = AresGold.ViewElementDef.SmallIcon;
@@ -122,7 +135,6 @@ namespace MadSkunky.TutorialTweaks
             AresTutorial.DamagePayload.AutoFireShotCount = modConfig.NewSpecialAresSettings.BurstCount;
             AresTutorial.SpreadDegrees = (float)41 / modConfig.NewSpecialAresSettings.EffectiveRange;
             AresTutorial.ReturnFirePerc = 100;
-            AresTutorial.IncompetenceAccuracyMultiplier = (float)1.0; // no penalty when using without proficiency
             Logger.Debug("----------------------------------------------------------------------------------------------------", false);
             Logger.Debug($"[Repo] patch tutorial Ares => Type: {AresTutorial.GetType().Name}, DefName: {AresTutorial.name}");
             Logger.Debug($"                            |=> DisplayName1: {AresTutorial.ViewElementDef.DisplayName1.LocalizeEnglish()}");
@@ -136,17 +148,17 @@ namespace MadSkunky.TutorialTweaks
             return AresTutorial;
         }
 
-        // Make special 'tutorial' Ares manufacturable
-        public static void ApllyManufacturableTutAres()
+        // Make special Ares manufacturable
+        public static void MakeSpecialAresManufacturable()
         {
-            // Get needed repo defs
+            // Get definition for the tutorial Ares = added new special Ares
             WeaponDef AresTutorial = Repo.GetAllDefs<WeaponDef>().First(tad => tad.name.Contains("PX_AssaultRifle_Tutorial_WeaponDef"));
-            // Mark items as manufacturable
+            // Mark it as manufacturable by adding the necessary tag
             if (!AresTutorial.Tags.Contains(Shared.SharedGameTags.ManufacturableTag))
             {
                 AresTutorial.Tags.Add(Shared.SharedGameTags.ManufacturableTag);
             }
-            // Adding the weapon manufacturing as reward for the 'Atmospheric Analysis' research
+            // Adding the weapon manufacturing as reward for the 'Atmospheric Analysis' research --- todo => make the research configurable
             // Converting existing reward array to list, adding maufacturable items, reapply to research def as new array
             ResearchDef researchDef = Repo.GetAllDefs<ResearchDef>().First(rd => rd.name.Contains("PX_AtmosphericAnalysis_ResearchDef"));
             List<ResearchRewardDef> rewardDefs = researchDef.Unlocks.ToList();
