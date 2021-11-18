@@ -1,13 +1,7 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using Base.Core;
-using Base.Defs;
 using Harmony;
-using PhoenixPoint.Common.Entities.Items;
-using PhoenixPoint.Geoscape.Entities.Research;
-using PhoenixPoint.Tactical.Entities.Weapons;
 
 namespace MadSkunky.TutorialTweaks
 {

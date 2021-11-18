@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31729.503
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TutorialTweaks", "TutorialJacobFix\TutorialTweaks.csproj", "{5EE9BEE2-9559-4AA7-B25C-26AFD0950902}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TutorialTweaks", "TutorialTweaks\TutorialTweaks.csproj", "{5EE9BEE2-9559-4AA7-B25C-26AFD0950902}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
