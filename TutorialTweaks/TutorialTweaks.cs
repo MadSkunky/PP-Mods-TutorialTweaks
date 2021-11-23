@@ -54,17 +54,7 @@ namespace MadSkunky.TutorialTweaks
             Logger.Debug("----------------------------------------------------------------------------------------------------", false);
             Logger.Debug("HomeMod: Harmony patches applied");
             Logger.Debug("----------------------------------------------------------------------------------------------------", false);
-/*
-            List<TacticalAbilityDef> PersonalAbilityPool = (from p in Repo.GetAllDefs<TacticalAbilityDef>()
-                                                             where p.CharacterProgressionData != null && p.CharacterProgressionData.PersonalTrackTags.Contains(Shared.SharedGameTags.PersonalProgressionTag)
-                                                             select p).ToList();
-            Logger.Always("----------------------------------------------------------------------------------------------------", false);
-            foreach (TacticalAbilityDef tad in PersonalAbilityPool)
-            {
-                Logger.Always(tad.name, false);
-            }
-            Logger.Always("----------------------------------------------------------------------------------------------------", false);
-*/
+
             _ = api("log verbose", "Mod Initialised.");
         }
         public static void GeoscapeMod()
