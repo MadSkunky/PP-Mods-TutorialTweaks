@@ -2,7 +2,7 @@
 Updated Version, completely replaces my previous JS mod "TutorialJacobFix".
 (The older mod will be deactivated when installing this "TutorialTweaks" mod per Modnix and can be removed).
 
-## Some Tutorial tweaks, and, most important, Jacob as Sniper as it should be ;-)
+## Some Tutorial tweaks, and, most important, Jacob as Sniper as it should be!
 
 Fixes the tutorial so that Jacob appears as a Sniper as he is shown on the start screen and the tutorial cutscenes and adds some configurations to tweak the tutorial members as well as a "new" modified and highly configurable Ares Assault Rifle.
 
