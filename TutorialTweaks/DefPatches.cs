@@ -18,17 +18,17 @@ namespace MadSkunky.TutorialTweaks
 {
     class DefPatches
     {
-        // Get definition repository and shared data
-        private static readonly DefRepository Repo = GameUtl.GameComponent<DefRepository>();
+        // Get config, definition repository and shared data
         private static readonly ModConfig modConfig = TutorialTweaks.Config;
+        private static readonly DefRepository Repo = GameUtl.GameComponent<DefRepository>();
         private static readonly SharedData Shared = GameUtl.GameComponent<SharedData>();
         public static void ApplyJacobAsSniper()
         {
             // Get Jacobs definition for the 1st part of the tutorial
             TacCharacterDef Jacob1 = Repo.GetAllDefs<TacCharacterDef>().First(tcd => tcd.name.Contains("PX_Jacob_Tutorial_TacCharacterDef"));
-            // Set class related definitions
+            // Set class related definition for actor view
             Jacob1.Data.ViewElementDef = Repo.GetAllDefs<ViewElementDef>().First(ved => ved.name.Contains("E_View [PX_Sniper_ActorViewDef]"));
-            // Switch the ClassTagDef in Jacobs GameTags
+            // Switch the given Assault ClassTagDef in Jacobs GameTags to Sniper (keep both ClassTagDefs would make him dual classed rigth from scratch)
             GameTagDef Sniper_CTD = Repo.GetAllDefs<GameTagDef>().First(gtd => gtd.name.Contains("Sniper_ClassTagDef"));
             for (int i = 0; i < Jacob1.Data.GameTags.Length; i++)
             {
@@ -39,14 +39,14 @@ namespace MadSkunky.TutorialTweaks
             }
             if (modConfig.GiveJacobAssaultRifleProficiency)
             {
-                // Get Assault Rifle item tag and add it to Jacobs GameTags = Jacob get proficiency for ARs
+                // Add Assault Rifle item tag to Jacobs GameTags = Jacob should get proficiency for AR (still shows 'not proficient')
                 List<GameTagDef> JacobsGameTagsList = Jacob1.Data.GameTags.ToList();
                 JacobsGameTagsList.Add(Repo.GetAllDefs<GameTagDef>().First(gtd => gtd.name.Contains("AssaultRifleItem_TagDef")));
                 Jacob1.Data.GameTags = JacobsGameTagsList.ToArray();
             }
             // Creating new arrays for Abilities, BodypartItems (armor), EquipmentItems (ready slots) and InventoryItems (backpack)
             // -> Overwrite old sets completely
-            Jacob1.Data.Abilites = new TacticalAbilityDef[] // abilities
+            Jacob1.Data.Abilites = new TacticalAbilityDef[] // abilities -> Class proficiency
             { 
                 Repo.GetAllDefs<ClassProficiencyAbilityDef>().First(cpad => cpad.name.Contains("Sniper_ClassProficiency_AbilityDef"))//,
                 //defRepository.GetAllDefs<TacticalAbilityDef>().First(cpad => cpad.name.Contains("GoodShot_AbilityDef"))
@@ -57,9 +57,9 @@ namespace MadSkunky.TutorialTweaks
                 Repo.GetAllDefs<TacticalItemDef>().First(tad => tad.name.Contains("PX_Sniper_Torso_BodyPartDef")),
                 Repo.GetAllDefs<TacticalItemDef>().First(tad => tad.name.Contains("PX_Sniper_Legs_ItemDef"))
             };
-            WeaponDef TutorialAres = PrepareSpecialAres(Repo);
-            WeaponDef JacobsAR = modConfig.GiveJacobNewSpecialAres ?
-                TutorialAres :
+            WeaponDef ModifiedAres = PrepareModifiedAres(); // Modify new Ares
+            WeaponDef JacobsAR = modConfig.GiveJacobModifiedAres ? // If configured then give Jacob the new Ares, else a normal one
+                ModifiedAres :
                 Repo.GetAllDefs<WeaponDef>().First(wd => wd.name.Contains("PX_AssaultRifle_WeaponDef"));
             Jacob1.Data.EquipmentItems = new ItemDef[] // Ready slots
             {
@@ -86,14 +86,15 @@ namespace MadSkunky.TutorialTweaks
             LogTacCharDef(Jacob1);
             LogTacCharDef(Jacob2);
         }
+
         // Special 'tutorial' Ares AR, unused def in repo, modified into a new AR
-        private static WeaponDef PrepareSpecialAres(DefRepository Repo)
+        private static WeaponDef PrepareModifiedAres()
         {
             // SharedData Shared = GameUtl.GameComponent<SharedData>();
             WeaponDef AresTutorial = Repo.GetAllDefs<WeaponDef>().First(tad => tad.name.Contains("PX_AssaultRifle_Tutorial_WeaponDef"));
             WeaponDef AresGold = Repo.GetAllDefs<WeaponDef>().First(tad => tad.name.Contains("PX_AssaultRifle_Gold_WeaponDef"));
             WeaponDef AresDefault = Repo.GetAllDefs<WeaponDef>().First(tad => tad.name.Contains("PX_AssaultRifle_WeaponDef"));
-            if (modConfig.NewSpecialAresSettings.NoPenaltyWithoutProficiency)
+            if (modConfig.ModifiedAresSettings.NoPenaltyWithoutProficiency)
             {
                 GameTagDef AllClasses_CTD = Repo.GetAllDefs<GameTagDef>().First(gtd => gtd.name.Contains("AllClasses_ClassTagDef"));
                 AresTutorial.Tags.Add(AllClasses_CTD);                    // Selectable without warning and for all classes
@@ -108,59 +109,58 @@ namespace MadSkunky.TutorialTweaks
             AresTutorial.SkinData = AresGold.SkinData;
             AresTutorial.HitPoints = AresDefault.HitPoints;
             AresTutorial.ChargesMax = AresDefault.ChargesMax;
-            AresTutorial.ManufactureTech = modConfig.NewSpecialAresSettings.ManufacturingCost.Tech;
-            AresTutorial.ManufactureMaterials = modConfig.NewSpecialAresSettings.ManufacturingCost.Materials;
-            AresTutorial.ManufacturePointsCost = modConfig.NewSpecialAresSettings.ManufacturingCost.TimePoints;
+            AresTutorial.ManufactureTech = modConfig.ModifiedAresSettings.ManufacturingValues[ConfigHelper.Tech];
+            AresTutorial.ManufactureMaterials = modConfig.ModifiedAresSettings.ManufacturingValues[ConfigHelper.Mat];
+            AresTutorial.ManufacturePointsCost = modConfig.ModifiedAresSettings.ManufacturingValues[ConfigHelper.TP];
             AresTutorial.CrateSpawnWeight = AresDefault.CrateSpawnWeight;
             AresTutorial.DestroyOnActorDeathPerc = AresDefault.DestroyOnActorDeathPerc;
             AresTutorial.FumblePerc = 0;
-            AresTutorial.DamagePayload.DamageKeywords[0].Value = modConfig.NewSpecialAresSettings.Damage;
-            if (modConfig.NewSpecialAresSettings.Shred > 0)
-            {
-                AresTutorial.DamagePayload.DamageKeywords.Add(new DamageKeywordPair {
-                    DamageKeywordDef = Shared.SharedDamageKeywords.ShreddingKeyword,
-                    Value = modConfig.NewSpecialAresSettings.Shred
-                });
-            }
-
-            if (modConfig.NewSpecialAresSettings.Pierce > 0)
-            {
-                AresTutorial.DamagePayload.DamageKeywords.Add(new DamageKeywordPair {
-                    DamageKeywordDef = Shared.SharedDamageKeywords.PiercingKeyword,
-                    Value = modConfig.NewSpecialAresSettings.Pierce
-                });
-            }
-            AresTutorial.DamagePayload.DamageValue = AresTutorial.DamagePayload.DamageKeywords[0].Value;
+            AresTutorial.DamagePayload.DamageKeywords = ConfigHelper.DamageKeywords.FindAll(dkp => dkp.Value > 0);
+            AresTutorial.DamagePayload.DamageValue = AresTutorial.DamagePayload.DamageKeywords.First(dkp => dkp.DamageKeywordDef is DamageKeywordDef).Value;
             AresTutorial.DamagePayload.StopOnFirstHit = false;
-            AresTutorial.DamagePayload.AutoFireShotCount = modConfig.NewSpecialAresSettings.BurstCount;
-            AresTutorial.SpreadDegrees = (float)41 / modConfig.NewSpecialAresSettings.EffectiveRange;
+            AresTutorial.DamagePayload.AutoFireShotCount = modConfig.ModifiedAresSettings.BurstCount;
+            AresTutorial.DamagePayload.ProjectilesPerShot = modConfig.ModifiedAresSettings.ProjectilesPerShot;
+            AresTutorial.SpreadDegrees = 40.99f / modConfig.ModifiedAresSettings.EffectiveRange;
             AresTutorial.ReturnFirePerc = 100;
             Logger.Debug("----------------------------------------------------------------------------------------------------", false);
             Logger.Debug($"[Repo] patch tutorial Ares => Type: {AresTutorial.GetType().Name}, DefName: {AresTutorial.name}");
             Logger.Debug($"                            |=> DisplayName1: {AresTutorial.ViewElementDef.DisplayName1.LocalizeEnglish()}");
             Logger.Debug($"                            |=> Description: {AresTutorial.ViewElementDef.Description.LocalizeEnglish()}");
             Logger.Debug($"                            |=> Category: {AresTutorial.ViewElementDef.Category.LocalizeEnglish()}");
-            foreach (GameTagDef GTD in AresTutorial.Tags)
+            Logger.Debug($"                            |=> ManufactureTech: {AresTutorial.ManufactureTech}");
+            Logger.Debug($"                            |=> ManufactureMaterials: {AresTutorial.ManufactureMaterials}");
+            Logger.Debug($"                            |=> ManufacturePointsCost: {AresTutorial.ManufacturePointsCost}");
+            Logger.Debug($"                            |=> GameTags:");
+            foreach (GameTagDef gameTagDef in AresTutorial.Tags)
             {
-                Logger.Debug($"                GameTagDef  |=> Type: {GTD.GetType().Name}, DefName: {GTD.name}");
+                Logger.Debug($"                                |=> Type: {gameTagDef.GetType().Name}, DefName: {gameTagDef.name}");
+            }
+            Logger.Debug($"                            |=> Damage:");
+            foreach (DamageKeywordPair damageKeyword in AresTutorial.DamagePayload.DamageKeywords)
+            {
+                Logger.Debug($"                                |=> Type: {damageKeyword.DamageKeywordDef.name}, Value: {damageKeyword.Value}");
             }
             Logger.Debug("----------------------------------------------------------------------------------------------------", false);
+            Logger.Debug($"                            |=> Burst: {AresTutorial.DamagePayload.AutoFireShotCount}");
+            Logger.Debug($"                            |=> ProjectilesPerShot: {AresTutorial.DamagePayload.ProjectilesPerShot}");
+            Logger.Debug($"                            |=> SpreadDegrees: {AresTutorial.SpreadDegrees}");
+            Logger.Debug($"                            |=> EffectiveRange: {41f/AresTutorial.SpreadDegrees}");
             return AresTutorial;
         }
 
-        // Make special Ares manufacturable
-        public static void MakeSpecialAresManufacturable()
+        // Make the new modified Ares manufacturable
+        public static void MakeModifiedAresManufacturable()
         {
-            // Get definition for the tutorial Ares = added new special Ares
+            // Get definition for the tutorial Ares = modified new Ares
             WeaponDef AresTutorial = Repo.GetAllDefs<WeaponDef>().First(tad => tad.name.Contains("PX_AssaultRifle_Tutorial_WeaponDef"));
             // Mark it as manufacturable by adding the necessary tag
             if (!AresTutorial.Tags.Contains(Shared.SharedGameTags.ManufacturableTag))
             {
                 AresTutorial.Tags.Add(Shared.SharedGameTags.ManufacturableTag);
             }
-            // Adding the weapon manufacturing as reward for the 'Atmospheric Analysis' research --- todo => make the research configurable
+            // Adding the weapon manufacturing as reward for the 'PhoenixProject' research (right from game start) --- todo => make the research configurable
             // Converting existing reward array to list, adding maufacturable items, reapply to research def as new array
-            ResearchDef researchDef = Repo.GetAllDefs<ResearchDef>().First(rd => rd.name.Contains("PX_AtmosphericAnalysis_ResearchDef"));
+            ResearchDef researchDef = Repo.GetAllDefs<ResearchDef>().First(rd => rd.name.Contains("PX_PhoenixProject_ResearchDef"));
             List<ResearchRewardDef> rewardDefs = researchDef.Unlocks.ToList();
             rewardDefs.Add(new ManufactureResearchRewardDef() { Items = new ItemDef[] { AresTutorial } });
             researchDef.Unlocks = rewardDefs.ToArray();

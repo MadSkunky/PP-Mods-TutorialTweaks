@@ -1,7 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using Base.Core;
+using Base.Defs;
 using Harmony;
+using PhoenixPoint.Common.Core;
+using PhoenixPoint.Tactical.Entities.Abilities;
 
 namespace MadSkunky.TutorialTweaks
 {
@@ -12,6 +18,8 @@ namespace MadSkunky.TutorialTweaks
         internal static string ModName;
         internal static Version ModVersion;
         internal static HarmonyInstance Harmony;
+        private static readonly DefRepository Repo = GameUtl.GameComponent<DefRepository>();
+        private static readonly SharedData Shared = GameUtl.GameComponent<SharedData>();
 
         public static void HomeMod(Func<string, object, object> api)
         {
@@ -46,14 +54,24 @@ namespace MadSkunky.TutorialTweaks
             Logger.Debug("----------------------------------------------------------------------------------------------------", false);
             Logger.Debug("HomeMod: Harmony patches applied");
             Logger.Debug("----------------------------------------------------------------------------------------------------", false);
-
+/*
+            List<TacticalAbilityDef> PersonalAbilityPool = (from p in Repo.GetAllDefs<TacticalAbilityDef>()
+                                                             where p.CharacterProgressionData != null && p.CharacterProgressionData.PersonalTrackTags.Contains(Shared.SharedGameTags.PersonalProgressionTag)
+                                                             select p).ToList();
+            Logger.Always("----------------------------------------------------------------------------------------------------", false);
+            foreach (TacticalAbilityDef tad in PersonalAbilityPool)
+            {
+                Logger.Always(tad.name, false);
+            }
+            Logger.Always("----------------------------------------------------------------------------------------------------", false);
+*/
             _ = api("log verbose", "Mod Initialised.");
         }
-        public static void GeoscapeMod(Func<string, object, object> api)
+        public static void GeoscapeMod()
         {
-            if (Config.NewSpecialAresSettings.Manufacturable)
+            if (Config.ModifiedAresSettings.Manufacturable)
             {
-                DefPatches.MakeSpecialAresManufacturable();
+                DefPatches.MakeModifiedAresManufacturable();
             }
             Logger.Debug("----------------------------------------------------------------------------------------------------", false);
             Logger.Debug("GeoscapeMod: Repository definitions patched");
